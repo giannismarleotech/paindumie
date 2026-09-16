@@ -121,7 +121,7 @@ NOTFOUND = head("Pagina niet gevonden · Pain du Mie","Deze pagina bestaat niet 
 def open_date():
     import re as _re
     cfg = open(os.path.join(OUT,"assets/js/config.js"), encoding="utf-8").read()
-    m = _re.search(r'opensOn:\s*"(\d{4})-(\d{2})-(\d{2})"', cfg)
+    m = _re.search(r'"?opensOn"?\s*:\s*"(\d{4})-(\d{2})-(\d{2})"', cfg)
     if not m: return ""
     from datetime import date
     d = date(*map(int, m.groups()))
