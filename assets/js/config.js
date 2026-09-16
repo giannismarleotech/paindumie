@@ -72,7 +72,7 @@ window.PDM = /*PDM-DATA-START*/{
       "lounge": 6
     },
     "durationMinutes": 90,
-    "maxPeople": 8,
+    "maxPeople": 6,
     "daysAhead": 60,
     "closedDates": []
   }
