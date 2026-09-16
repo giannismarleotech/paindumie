@@ -949,3 +949,9 @@ body.intro-running .hero-foot,body.intro-running .seal{animation-play-state:paus
 }
 .nibble{display:block;margin-top:10px;font-size:.86rem;color:var(--brick);font-style:italic}
 .nibble .heart{width:.9em;height:.9em}
+
+/* tijdsloten met weinig plaats */
+.chip.krap{display:flex;flex-direction:column;align-items:center;gap:1px;padding:.5em .4em}
+.chip.krap small{font-size:.68rem;color:var(--brick);line-height:1}
+.chip.krap[aria-pressed=true] small{color:rgba(255,255,255,.85)}
+.chip:disabled[title="Volzet"]{text-decoration:none;position:relative;opacity:.45}

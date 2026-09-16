@@ -4,6 +4,33 @@ const C = window.PDM, R = C.reservations, {$, $$, DAYS, MONTHS, toMin, fmt, iso}
 if(!$("#booker")) return;
 
 const S = { date:null, time:null, people:2, zone:"Maakt niet uit", occasion:"", step:0, sending:false };
+const DUUR = R.durationMinutes || 90;
+let BEZET = {};                      // { "2026-10-10": [["10:00", 4, "tearoom"], ...] }
+
+/* bezetting ophalen uit de Google Sheet, zonder namen; lukt het niet, dan blijft alles open */
+(function laadBezetting(){
+  if(!C.boekingenApi) return;
+  const naam = "pdmBezet" + Date.now(), s = document.createElement("script");
+  const t = setTimeout(()=>{ s.remove(); delete window[naam]; }, 20000);
+  window[naam] = d=>{ clearTimeout(t); s.remove(); delete window[naam];
+    if(d && d.ok && d.bezet){ BEZET = d.bezet; if(S.date) renderCal(); if(S.step===1) renderSlots(); if(S.step===2) setPeople(S.people, true); } };
+  s.onerror = ()=>{ clearTimeout(t); s.remove(); delete window[naam]; };
+  s.src = C.boekingenApi + (C.boekingenApi.indexOf("?")>-1?"&":"?") + "actie=bezetting&callback=" + naam + "&t=" + Date.now();
+  document.head.appendChild(s);
+})();
+
+/* hoeveel plaatsen zijn er nog vrij in de tearoom op dit uur? */
+function vrij(d, t){
+  const lijst = BEZET[iso(d)] || [];
+  const start = toMin(t), einde = start + DUUR;
+  let bezet = 0;
+  lijst.forEach(([u, n, zone])=>{
+    if(zone === "lounge") return;
+    const s2 = toMin(u), e2 = s2 + DUUR;
+    if(s2 < einde && e2 > start) bezet += n;     // overlapt met dit slot
+  });
+  return Math.max(0, (R.seats && R.seats.tearoom || 26) - bezet);
+}
 const today = new Date(); today.setHours(0,0,0,0);
 // vroegst mogelijke dag: vandaag, of de openingsdatum als die nog moet komen
 const firstDay = (function(){
@@ -23,7 +50,10 @@ function slotsFor(d){
   const h = C.hours[d.getDay()]; if(!h) return [];
   const out = [], o = Math.max(toMin(h[0]), toMin(R.firstSlot)), c = toMin(h[1]) - R.lastSlotBeforeClose;
   const now = new Date(), isToday = +d === +today, limit = now.getHours()*60 + now.getMinutes() + R.minNoticeMinutes;
-  for(let m = o; m <= c; m += R.slotStep) out.push({ t:fmt(m), m, past: isToday && m < limit });
+  for(let m = o; m <= c; m += R.slotStep){
+    const t = fmt(m), v = vrij(d, t);
+    out.push({ t, m, past: (isToday && m < limit) || v <= 0, vrij: v });
+  }
   return out;
 }
 
@@ -76,6 +106,8 @@ function renderSlots(){
     g.innerHTML = `<h4>${name}</h4><div class="slots" role="group" aria-label="${name}"></div>`;
     list.forEach(s=>{
       const b = document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=s.t; b.disabled=s.past;
+      if(s.vrij <= 0) b.title = "Volzet";
+      else if(s.vrij <= 6){ b.classList.add("krap"); b.innerHTML = s.t + "<small>nog " + s.vrij + "</small>"; }
       b.setAttribute("aria-pressed", S.time===s.t);
       b.onclick = ()=>{ S.time = s.t; $$(".chip",wrap).forEach(x=>x.setAttribute("aria-pressed", x===b)); flash($("#tTime"), s.t); update(); setTimeout(()=>go(2), 260); };
       $(".slots",g).appendChild(b);
@@ -85,10 +117,18 @@ function renderSlots(){
 }
 
 /* ---- gezelschap ---- */
+function maxNu(){
+  const v = (S.date && S.time) ? vrij(S.date, S.time) : R.maxPeople;
+  return Math.max(1, Math.min(R.maxPeople, v));
+}
 function setPeople(n, silent){
-  S.people = Math.min(R.maxPeople, Math.max(1, n)); $("#pOut").textContent = S.people;
-  $("#pMinus").disabled = S.people <= 1; $("#pPlus").disabled = S.people >= R.maxPeople;
-  $("#pHint").hidden = S.people < R.maxPeople;
+  const max = maxNu();
+  S.people = Math.min(max, Math.max(1, n)); $("#pOut").textContent = S.people;
+  $("#pMinus").disabled = S.people <= 1; $("#pPlus").disabled = S.people >= max;
+  $("#pHint").hidden = S.people < max;
+  $("#pHint").innerHTML = max < R.maxPeople
+    ? `Op dit uur zijn er nog ${max} ${max===1?"plaats":"plaatsen"} vrij. Met meer? Bel of app naar <a class="text-link" href="tel:${C.phone}">${C.phoneLabel}</a>.`
+    : `Met meer? Bel of app naar <a class="text-link" href="tel:${C.phone}">${C.phoneLabel}</a>.`;
   if(typeof syncZones === "function") syncZones();
   const t = S.people + (S.people===1 ? " persoon" : " personen");
   silent ? ($("#tPeople").textContent = t) : flash($("#tPeople"), t);

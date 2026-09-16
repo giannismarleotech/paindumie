@@ -66,6 +66,8 @@ function doPost(e) {
       if (d.sleutel !== SLEUTEL) return antwoord_({ ok: false, fout: "sleutel" });
       return antwoord_(zetStatus_(d.id, d.status, d.notitie));
     }
+    // handmatig ingegeven in het dashboard: meteen bevestigd, geen melding naar de zaak
+    var handmatig = d.handmatig === true && d.sleutel === SLEUTEL;
 
     var sh = blad_();
     var id = "R" + new Date().getTime();
@@ -73,7 +75,7 @@ function doPost(e) {
       id: id,
       binnengekomen: new Date(),
       soort: d.soort === "bericht" ? "bericht" : "reservatie",
-      status: "nieuw",
+      status: handmatig ? "bevestigd" : "nieuw",
       dag: d.dag || "", datum: d.datum || "", uur: d.uur || "",
       personen: d.personen || "", plaats: d.plaats || "", gelegenheid: d.gelegenheid || "",
       naam: d.naam || "", telefoon: d.telefoon || "", email: d.email || "",
@@ -87,8 +89,12 @@ function doPost(e) {
       var v = rij[k];
       return (v instanceof Date) ? Utilities.formatDate(v, "Europe/Brussels", "yyyy-MM-dd HH:mm") : String(v);
     })]);
-    stuurMail_(rij);
-    stuurOntvangst_(rij);
+    if (handmatig) {
+      if (rij.email) stuurBeslissing_(rij, "bevestigd", "");
+    } else {
+      stuurMail_(rij);
+      stuurOntvangst_(rij);
+    }
     return antwoord_({ ok: true, id: id });
   } catch (err) {
     return antwoord_({ ok: false, fout: String(err) });
@@ -97,9 +103,34 @@ function doPost(e) {
   }
 }
 
+/* ---------- bezetting voor de website (geen persoonsgegevens) ---------- */
+function bezetting_(callback) {
+  var sh = blad_();
+  var waarden = sh.getDataRange().getValues();
+  var koppen = waarden.shift() || [];
+  var kS = koppen.indexOf("soort"), kSt = koppen.indexOf("status"), kD = koppen.indexOf("datum"),
+      kU = koppen.indexOf("uur"), kP = koppen.indexOf("personen"), kPl = koppen.indexOf("plaats");
+  var uit = {};
+  var vandaag = Utilities.formatDate(new Date(), "Europe/Brussels", "yyyy-MM-dd");
+  waarden.forEach(function (r) {
+    if (r[kS] === "bericht" || r[kSt] === "geannuleerd") return;
+    var datum = r[kD], uur = r[kU];
+    if (Object.prototype.toString.call(datum) === "[object Date]") datum = Utilities.formatDate(datum, "Europe/Brussels", "yyyy-MM-dd");
+    if (Object.prototype.toString.call(uur) === "[object Date]") uur = Utilities.formatDate(uur, "Europe/Brussels", "HH:mm");
+    datum = String(datum).slice(0, 10); uur = String(uur).slice(0, 5);
+    if (!datum || datum < vandaag) return;
+    var n = parseInt(r[kP], 10) || 0;
+    var zone = String(r[kPl]) === "Lounge" ? "lounge" : "tearoom";
+    uit[datum] = uit[datum] || [];
+    uit[datum].push([uur, n, zone]);
+  });
+  return antwoord_({ ok: true, bezet: uit }, callback);
+}
+
 /* ---------- lijst voor het dashboard ---------- */
 function doGet(e) {
   var p = e.parameter || {};
+  if (p.actie === "bezetting") return bezetting_(p.callback);
   if (p.sleutel !== SLEUTEL) return antwoord_({ ok: false, fout: "sleutel" }, p.callback);
   var sh = blad_();
   var waarden = sh.getDataRange().getValues();

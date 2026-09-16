@@ -7,6 +7,8 @@
    hours       : per dag ["open","sluit"] of null bij gesloten. 0 = zondag.
    opensOn     : reserveren kan pas vanaf deze datum ("" = meteen open)
    seats       : plaatsen in de zaak; in de lounge kan enkel iets gedronken worden
+   durationMinutes : hoelang een tafel bezet blijft na het gekozen uur (voor de
+                  beschikbaarheid op de website)
    closedDates : verlofdagen, bv. ["2026-12-25","2027-01-01"]
 
    boekingenApi : adres van het Google-script waar reservaties en berichten
@@ -51,6 +53,7 @@ window.PDM = /*PDM-DATA-START*/{
     "lastSlotBeforeClose": 60,
     "minNoticeMinutes": 60,
     "seats": { "tearoom": 26, "lounge": 8 },
+    "durationMinutes": 90,
     "maxPeople": 8,
     "daysAhead": 60,
     "closedDates": []

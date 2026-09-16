@@ -102,6 +102,7 @@
           <strong id="kalMaand"></strong>
           <button class="icon" id="kalNext" type="button" aria-label="Volgende maand">›</button>
           <span class="kal-legend"><i class="l-nieuw"></i> nieuw <i class="l-bev"></i> bevestigd</span>
+          <button class="btn primary" id="nieuwBtn" type="button">+ Reservatie ingeven</button>
         </div>
         <div class="kal-grid" id="kalGrid"></div>
         <div class="kal-dag" id="kalDag"><p class="mini">Klik op een dag om te zien wie er komt.</p></div>
@@ -169,6 +170,31 @@
     <footer>
       <button class="btn ghost" id="setCancel" type="button">Annuleren</button>
       <button class="btn primary" id="setSave" type="button">Bewaren</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ---------- handmatige reservatie ---------- -->
+<div class="modal small" id="nieuwModal" hidden>
+  <div class="modal-card">
+    <header><h2>Reservatie ingeven</h2><button class="x" id="nwClose" type="button" aria-label="Sluiten">×</button></header>
+    <div class="modal-body">
+      <p class="mini" style="margin:0 0 14px">Voor telefonische of mondelinge reservaties. Ze staat meteen als bevestigd en telt mee voor de beschikbaarheid op de website.</p>
+      <div class="grid2">
+        <label class="fld"><span>Dag</span><input id="nwDatum" type="date"></label>
+        <label class="fld"><span>Uur</span><input id="nwUur" type="time" step="900"></label>
+        <label class="fld"><span>Personen</span><input id="nwPers" type="number" min="1" max="60" value="2"></label>
+        <label class="fld"><span>Plaats</span><select id="nwPlaats"><option>Tearoom</option><option>Lounge</option><option>Maakt niet uit</option></select></label>
+        <label class="fld wide"><span>Naam</span><input id="nwNaam"></label>
+        <label class="fld"><span>Telefoon</span><input id="nwTel" type="tel"></label>
+        <label class="fld"><span>E-mail (optioneel, klant krijgt dan een bevestiging)</span><input id="nwMail" type="email"></label>
+        <label class="fld wide"><span>Opmerking</span><input id="nwOpm"></label>
+      </div>
+      <div class="err" id="nwErr" role="alert" hidden></div>
+    </div>
+    <footer>
+      <button class="btn ghost" id="nwCancel" type="button">Annuleren</button>
+      <button class="btn primary" id="nwSave" type="button">Toevoegen</button>
     </footer>
   </div>
 </div>

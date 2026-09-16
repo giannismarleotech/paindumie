@@ -582,6 +582,50 @@
       });
     });
   }
+  /* ---------- handmatige reservatie ---------- */
+  var DAGNAMEN = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
+  function langeDag(iso) {
+    var p = iso.split("-").map(Number), d = new Date(p[0], p[1] - 1, p[2]);
+    return DAGNAMEN[d.getDay()] + " " + d.getDate() + " " + MAANDEN[d.getMonth()];
+  }
+  $("#nieuwBtn").addEventListener("click", function () {
+    setErr($("#nwErr"), "");
+    $("#nwDatum").value = boek.dag || ymd(new Date());
+    $("#nwUur").value = "";
+    $("#nwPers").value = 2;
+    ["nwNaam", "nwTel", "nwMail", "nwOpm"].forEach(function (id) { $("#" + id).value = ""; });
+    show($("#nieuwModal"), true);
+    setTimeout(function () { $("#nwNaam").focus(); }, 30);
+  });
+  function sluitNieuw() { show($("#nieuwModal"), false); }
+  $("#nwClose").addEventListener("click", sluitNieuw);
+  $("#nwCancel").addEventListener("click", sluitNieuw);
+  $("#nwSave").addEventListener("click", function () {
+    var datum = $("#nwDatum").value, uur = $("#nwUur").value, naam = $("#nwNaam").value.trim();
+    var pers = parseInt($("#nwPers").value, 10) || 0;
+    if (!datum || !uur || !naam || pers < 1) { setErr($("#nwErr"), "Vul minstens dag, uur, naam en aantal personen in."); return; }
+    var mail = $("#nwMail").value.trim();
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) { setErr($("#nwErr"), "Dat e-mailadres klopt niet."); return; }
+    var knop = $("#nwSave"); knop.classList.add("busy");
+    boekApi({
+      actie: "nieuw", handmatig: true, soort: "reservatie",
+      dag: langeDag(datum), datum: datum, uur: uur, personen: pers,
+      plaats: $("#nwPlaats").value, gelegenheid: "-",
+      naam: naam, telefoon: $("#nwTel").value.trim() || "-", email: mail, opmerking: $("#nwOpm").value.trim() || "-"
+    }).then(function () {
+      knop.classList.remove("busy"); sluitNieuw();
+      boek.dag = datum; boek.maand = new Date(parseInt(datum.slice(0, 4), 10), parseInt(datum.slice(5, 7), 10) - 1, 1);
+      // meteen tonen, Google volgt een paar seconden later
+      boek.items.unshift({ id: "tijdelijk" + Date.now(), soort: "reservatie", status: "bevestigd", dag: langeDag(datum), datum: datum, uur: uur,
+        personen: pers, plaats: $("#nwPlaats").value, gelegenheid: "-", naam: naam, telefoon: $("#nwTel").value.trim(), email: mail, opmerking: $("#nwOpm").value.trim(), binnengekomen: "zonet" });
+      toonBoekingen();
+      setTimeout(function () { haalBoekingen().then(toonBoekingen).catch(function () {}); }, 6000);
+    }).catch(function () {
+      knop.classList.remove("busy");
+      setErr($("#nwErr"), "Kon niet bewaren. Controleer de internetverbinding en probeer opnieuw.");
+    });
+  });
+
   $("#kalPrev").addEventListener("click", function () { boek.maand = new Date(boek.maand.getFullYear(), boek.maand.getMonth() - 1, 1); toonKalender(); });
   $("#kalNext").addEventListener("click", function () { boek.maand = new Date(boek.maand.getFullYear(), boek.maand.getMonth() + 1, 1); toonKalender(); });
 

@@ -116,6 +116,17 @@ hoeveel aanvragen er zijn (rood = nieuw, groen = bevestigd) en hoeveel
 personen. Klik op een dag voor de namen en uren. Daar kan je ook
 annuleren, of een geannuleerde reservatie terugzetten.
 
+Met de knop "+ Reservatie ingeven" zet je een telefonische of mondelinge
+reservatie in de kalender. Die staat meteen als bevestigd.
+
+BESCHIKBAARHEID OP DE WEBSITE
+Alles wat niet geannuleerd is, telt mee: de website weet per tijdslot
+hoeveel plaatsen er nog vrij zijn in de tearoom. Een tafel blijft
+90 minuten bezet (aanpasbaar: durationMinutes in config.js). Volle
+uren kan een bezoeker niet meer kiezen, en het aantal personen wordt
+beperkt tot wat er nog vrij is. Annuleer je iets, dan komt de plaats
+meteen weer vrij.
+
 =====================================================
 6. BESTANDEN
 =====================================================

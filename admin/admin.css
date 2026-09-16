@@ -123,7 +123,7 @@ button{font:inherit;cursor:pointer}
 .kal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .kal-head strong{font:500 1.3rem var(--serif);text-transform:capitalize;min-width:170px;text-align:center}
 .kal-head .icon{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:1.3rem;line-height:1}
-.kal-legend{margin-left:auto;font-size:.82rem;color:var(--muted);display:flex;gap:10px;align-items:center}
+.kal-legend{margin-left:auto;margin-right:10px;font-size:.82rem;color:var(--muted);display:flex;gap:10px;align-items:center}
 .kal-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 .l-nieuw{background:var(--brick)}.l-bev{background:#3F7A46}
 .kal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
@@ -150,3 +150,5 @@ button{font:inherit;cursor:pointer}
 .kal-rij .acties{display:flex;gap:6px}
 .kal-rij .acties .btn{padding:.45em .85em;font-size:.82rem}
 @media (max-width:620px){.kal-cel{min-height:50px;padding:4px 5px}.kal-cel small{display:none}.kal-rij{grid-template-columns:52px 1fr}.kal-rij .acties{grid-column:1/-1}}
+#nieuwBtn{padding:.55em 1em;font-size:.86rem}
+@media (max-width:620px){#nieuwBtn{width:100%;justify-content:center}}
