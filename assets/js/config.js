@@ -38,21 +38,39 @@ window.PDM = /*PDM-DATA-START*/{
     "instagram": ""
   },
   "hours": {
-    "0": ["07:00", "18:00"],
+    "0": [
+      "07:00",
+      "18:00"
+    ],
     "1": null,
     "2": null,
-    "3": ["07:00", "16:00"],
-    "4": ["07:00", "16:00"],
-    "5": ["07:00", "18:00"],
-    "6": ["07:00", "18:00"]
+    "3": [
+      "07:00",
+      "16:00"
+    ],
+    "4": [
+      "07:00",
+      "16:00"
+    ],
+    "5": [
+      "07:00",
+      "18:00"
+    ],
+    "6": [
+      "07:00",
+      "18:00"
+    ]
   },
   "reservations": {
-    "opensOn": "2026-10-07",
+    "opensOn": "2026-10-03",
     "firstSlot": "08:00",
     "slotStep": 30,
     "lastSlotBeforeClose": 60,
     "minNoticeMinutes": 60,
-    "seats": { "tearoom": 26, "lounge": 8 },
+    "seats": {
+      "tearoom": 26,
+      "lounge": 6
+    },
     "durationMinutes": 90,
     "maxPeople": 8,
     "daysAhead": 60,
