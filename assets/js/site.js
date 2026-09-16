@@ -22,17 +22,18 @@ async function post(url, opts){
 C.bewaar = async function(soort, velden){
   if(!C.boekingenApi) return false;
   try{
-    const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 15000);
-    const r = await fetch(C.boekingenApi, {
+    const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 25000);
+    // mode "no-cors": de aanvraag komt gewoon aan bij Google, maar de browser hoeft het
+    // antwoord niet te lezen. Google stuurt dat namelijk via een omweg die browsers weigeren.
+    await fetch(C.boekingenApi, {
       method: "POST",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},   // zo vraagt de browser geen preflight
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
       body: JSON.stringify(Object.assign({actie:"nieuw", soort:soort}, velden)),
       signal: ctrl.signal
     });
     clearTimeout(t);
-    if(!r.ok) return false;
-    const j = await r.json().catch(()=>({}));
-    return j.ok === true;
+    return true;
   }catch(e){ return false; }
 };
 

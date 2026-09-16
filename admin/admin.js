@@ -452,22 +452,42 @@
     if (!c.boekingenApi) return Promise.reject(new Error("niet-ingesteld"));
     return fetch(c.boekingenApi, {
       method: "POST",
+      mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(Object.assign({ sleutel: c.boekingenKey }, body))
-    }).then(function (r) { return r.json(); });
+    }).then(function () { return { ok: true }; });
   }
 
+  /* De lijst komt binnen via een <script>-tag. Zo omzeilen we de omweg waar browsers over vallen. */
   function haalBoekingen() {
     var c = cfg();
     if (!c.boekingenApi) return Promise.reject(new Error("niet-ingesteld"));
-    var url = c.boekingenApi + (c.boekingenApi.indexOf("?") > -1 ? "&" : "?") +
-      "sleutel=" + encodeURIComponent(c.boekingenKey || "") + "&t=" + Date.now();
-    return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || d.ok !== true) throw new Error(d && d.fout === "sleutel"
-        ? "De sleutel klopt niet met die in het Google-script."
-        : "De lijst kon niet geladen worden.");
-      boek.items = d.items || [];
-      return boek.items;
+    return new Promise(function (resolve, reject) {
+      var naam = "pdmLijst" + Date.now();
+      var s = document.createElement("script");
+      var klaar = false;
+      var timer = setTimeout(function () {
+        if (klaar) return; klaar = true; s.remove(); delete window[naam];
+        reject(new Error("Google antwoordt niet. Is het script wel geïmplementeerd voor 'Iedereen'?"));
+      }, 25000);
+      window[naam] = function (d) {
+        if (klaar) return; klaar = true; clearTimeout(timer); s.remove(); delete window[naam];
+        if (!d || d.ok !== true) {
+          reject(new Error(d && d.fout === "sleutel"
+            ? "De sleutel klopt niet met die in het Google-script."
+            : "De lijst kon niet geladen worden."));
+          return;
+        }
+        boek.items = d.items || [];
+        resolve(boek.items);
+      };
+      s.src = c.boekingenApi + (c.boekingenApi.indexOf("?") > -1 ? "&" : "?") +
+        "sleutel=" + encodeURIComponent(c.boekingenKey || "") + "&callback=" + naam + "&t=" + Date.now();
+      s.onerror = function () {
+        if (klaar) return; klaar = true; clearTimeout(timer); s.remove(); delete window[naam];
+        reject(new Error("Google kon niet bereikt worden."));
+      };
+      document.head.appendChild(s);
     });
   }
 
@@ -523,10 +543,10 @@
     $$("#boekLijst .acties .btn").forEach(function (b) {
       b.addEventListener("click", function () {
         b.classList.add("busy");
-        boekApi({ actie: "status", id: b.dataset.id, status: b.dataset.act }).then(function (d) {
-          if (!d || d.ok !== true) throw new Error("mislukt");
+        boekApi({ actie: "status", id: b.dataset.id, status: b.dataset.act }).then(function () {
           boek.items.forEach(function (it) { if (it.id === b.dataset.id) it.status = b.dataset.act; });
           toonBoekingen();
+          setTimeout(function () { haalBoekingen().then(toonBoekingen).catch(function () {}); }, 2500);
         }).catch(function () {
           b.classList.remove("busy");
           setErr($("#boekErr"), "De status kon niet aangepast worden. Probeer opnieuw.");

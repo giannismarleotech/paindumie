@@ -27,8 +27,8 @@ window.PDM = /*PDM-DATA-START*/{
   "phone": "+32498482256",
   "phoneLabel": "0498 48 22 56",
   "netlifyForms": false,
-  "boekingenApi":"https://script.google.com/macros/s/AKfycbxdSf6yfhA8o8QWH0A4j3iULa2hKJ9iFmVzi9rAW6gR6oxajkWh_eR7kUsE_1cYKoIj/exec",
-  "boekingenKey":"paindumie-2026",
+  "boekingenApi": "https://script.google.com/macros/s/AKfycbxdSf6yfhA8o8QWH0A4j3iULa2hKJ9iFmVzi9rAW6gR6oxajkWh_eR7kUsE_1cYKoIj/exec",
+  "boekingenKey": "paindumie-2026",
   "formEndpoint": "https://formsubmit.co/ajax/paindumie.bazel@gmail.com",
   "links": {
     "google": "",

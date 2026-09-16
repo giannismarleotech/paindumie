@@ -44,9 +44,13 @@ function blad_() {
   return sh;
 }
 
-function antwoord_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function antwoord_(obj, callback) {
+  var json = JSON.stringify(obj);
+  if (callback && /^[\w$]+$/.test(callback)) {          // JSONP: voor het dashboard
+    return ContentService.createTextOutput(callback + "(" + json + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ---------- binnenkomende aanvragen ---------- */
@@ -86,7 +90,7 @@ function doPost(e) {
 /* ---------- lijst voor het dashboard ---------- */
 function doGet(e) {
   var p = e.parameter || {};
-  if (p.sleutel !== SLEUTEL) return antwoord_({ ok: false, fout: "sleutel" });
+  if (p.sleutel !== SLEUTEL) return antwoord_({ ok: false, fout: "sleutel" }, p.callback);
   var sh = blad_();
   var waarden = sh.getDataRange().getValues();
   var koppen = waarden.shift() || [];
@@ -99,7 +103,7 @@ function doGet(e) {
     return o;
   }).filter(function (o) { return o.id; });
   items.reverse();                                  // nieuwste eerst
-  return antwoord_({ ok: true, items: items.slice(0, 500) });
+  return antwoord_({ ok: true, items: items.slice(0, 500) }, p.callback);
 }
 
 function zetStatus_(id, status, notitie) {
