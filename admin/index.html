@@ -90,10 +90,21 @@
     </header>
     <div class="modal-body">
       <div class="tabs" id="boekTabs">
-        <button class="tab on" data-tab="nieuw" type="button">Nieuw</button>
+        <button class="tab on" data-tab="kalender" type="button">Kalender</button>
+        <button class="tab" data-tab="nieuw" type="button">Nieuw</button>
         <button class="tab" data-tab="bevestigd" type="button">Bevestigd</button>
         <button class="tab" data-tab="berichten" type="button">Berichten</button>
         <button class="tab" data-tab="alles" type="button">Alles</button>
+      </div>
+      <div id="kalWrap" class="kal" hidden>
+        <div class="kal-head">
+          <button class="icon" id="kalPrev" type="button" aria-label="Vorige maand">‹</button>
+          <strong id="kalMaand"></strong>
+          <button class="icon" id="kalNext" type="button" aria-label="Volgende maand">›</button>
+          <span class="kal-legend"><i class="l-nieuw"></i> nieuw <i class="l-bev"></i> bevestigd</span>
+        </div>
+        <div class="kal-grid" id="kalGrid"></div>
+        <div class="kal-dag" id="kalDag"><p class="mini">Klik op een dag om te zien wie er komt.</p></div>
       </div>
       <div id="boekLijst" class="boeklijst"><p class="mini">Laden…</p></div>
       <div class="err" id="boekErr" role="alert" hidden></div>

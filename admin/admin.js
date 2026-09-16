@@ -443,7 +443,7 @@
   });
 
   /* ---------- reservaties en berichten ---------- */
-  var boek = { items: [], tab: "nieuw", bezig: false };
+  var boek = { items: [], tab: "kalender", bezig: false, maand: null, dag: null };
 
   function cfg() { return state.config || state.configOrig || {}; }
 
@@ -497,8 +497,100 @@
     });
   }
 
+  function zetStatus(knop, id, status) {
+    knop.classList.add("busy");
+    return boekApi({ actie: "status", id: id, status: status }).then(function () {
+      boek.items.forEach(function (it) { if (it.id === id) it.status = status; });
+      toonBoekingen();
+      setTimeout(function () { haalBoekingen().then(toonBoekingen).catch(function () {}); }, 6000);
+    }).catch(function () {
+      knop.classList.remove("busy");
+      setErr($("#boekErr"), "De status kon niet aangepast worden. Probeer opnieuw.");
+    });
+  }
+
+  /* ---------- kalender ---------- */
+  var MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+  function ymd(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function perDag() {
+    var map = {};
+    boek.items.forEach(function (it) {
+      if (it.soort === "bericht" || !it.datum) return;
+      var k = String(it.datum).slice(0, 10);
+      (map[k] = map[k] || []).push(it);
+    });
+    return map;
+  }
+  function toonKalender() {
+    var wrap = $("#kalWrap"); show(wrap, true);
+    if (!boek.maand) { var n = new Date(); boek.maand = new Date(n.getFullYear(), n.getMonth(), 1); }
+    var m = boek.maand, dagen = perDag(), vandaag = ymd(new Date());
+    var hours = (cfg().hours) || {};
+    $("#kalMaand").textContent = MAANDEN[m.getMonth()] + " " + m.getFullYear();
+    var html = ["ma", "di", "wo", "do", "vr", "za", "zo"].map(function (d) { return '<div class="dow">' + d + "</div>"; }).join("");
+    var offset = (m.getDay() + 6) % 7;
+    for (var i = 0; i < offset; i++) html += '<div class="kal-cel leeg"></div>';
+    var aantal = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+    for (var n = 1; n <= aantal; n++) {
+      var d = new Date(m.getFullYear(), m.getMonth(), n), k = ymd(d), lijst = dagen[k] || [];
+      var nieuw = lijst.filter(function (x) { return x.status === "nieuw"; }).length;
+      var bev = lijst.filter(function (x) { return x.status === "bevestigd"; }).length;
+      var pers = lijst.filter(function (x) { return x.status !== "geannuleerd"; })
+        .reduce(function (s, x) { return s + (parseInt(x.personen, 10) || 0); }, 0);
+      var dicht = hours[d.getDay()] === null || hours[String(d.getDay())] === null;
+      html += '<button type="button" class="kal-cel' + (k === vandaag ? " vandaag" : "") + (k === boek.dag ? " gekozen" : "") + (dicht ? " dicht" : "") + '" data-dag="' + k + '">' +
+        "<b>" + n + "</b>" +
+        (lijst.length ? '<span class="pil">' + (nieuw ? "<span>" + nieuw + "</span>" : "") + (bev ? '<span class="bev">' + bev + "</span>" : "") + "</span>" : "") +
+        (pers ? "<small>" + pers + " pers.</small>" : "") +
+        "</button>";
+    }
+    $("#kalGrid").innerHTML = html;
+    $$("#kalGrid .kal-cel[data-dag]").forEach(function (b) {
+      b.addEventListener("click", function () { boek.dag = b.dataset.dag; toonKalender(); });
+    });
+    toonDag(dagen);
+  }
+  function toonDag(dagen) {
+    var box = $("#kalDag");
+    if (!boek.dag) { box.innerHTML = '<p class="mini">Klik op een dag om te zien wie er komt.</p>'; return; }
+    var lijst = (dagen[boek.dag] || []).slice().sort(function (a, b) { return String(a.uur).localeCompare(String(b.uur)); });
+    var p = boek.dag.split("-"), titel = parseInt(p[2], 10) + " " + MAANDEN[parseInt(p[1], 10) - 1];
+    var actief = lijst.filter(function (x) { return x.status !== "geannuleerd"; });
+    var pers = actief.reduce(function (s, x) { return s + (parseInt(x.personen, 10) || 0); }, 0);
+    var seats = ((cfg().reservations || {}).seats) || {};
+    var cap = (seats.tearoom || 0) + (seats.lounge || 0);
+    var html = "<h4>" + titel + "</h4>";
+    if (!lijst.length) { box.innerHTML = html + '<p class="mini">Geen reservaties op deze dag.</p>'; return; }
+    html += '<p class="tot">' + actief.length + (actief.length === 1 ? " reservatie" : " reservaties") + " · " + pers + " personen" + (cap ? " van " + cap + " plaatsen" : "") + "</p>";
+    html += lijst.map(function (it) {
+      var knoppen = it.status === "geannuleerd"
+        ? '<button class="btn ghost" data-act="nieuw" data-id="' + esc(it.id) + '">Terugzetten</button>'
+        : (it.status === "nieuw" ? '<button class="btn primary" data-act="bevestigd" data-id="' + esc(it.id) + '">Bevestigen</button>' : "") +
+          '<button class="btn ghost" data-act="geannuleerd" data-id="' + esc(it.id) + '">Annuleren</button>';
+      return '<div class="kal-rij ' + esc(it.status) + '"><span class="u">' + esc(it.uur) + "</span>" +
+        '<span class="n">' + esc(it.naam) + " · " + esc(it.personen) + (String(it.personen) === "1" ? " persoon" : " personen") +
+        " · " + esc(it.plaats || "") + '<small>' + (it.telefoon ? '<a href="tel:' + esc(it.telefoon) + '">' + esc(it.telefoon) + "</a>" : "") +
+        (it.gelegenheid && it.gelegenheid !== "-" ? " · " + esc(it.gelegenheid) : "") +
+        (it.opmerking && it.opmerking !== "-" ? " · " + esc(it.opmerking) : "") + " · " + esc(it.status) + "</small></span>" +
+        '<span class="acties">' + knoppen + "</span></div>";
+    }).join("");
+    box.innerHTML = html;
+    $$("#kalDag .acties .btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (b.dataset.act === "geannuleerd" && !confirm("Deze reservatie annuleren? De klant krijgt daar een mail van.")) return;
+        zetStatus(b, b.dataset.id, b.dataset.act);
+      });
+    });
+  }
+  $("#kalPrev").addEventListener("click", function () { boek.maand = new Date(boek.maand.getFullYear(), boek.maand.getMonth() - 1, 1); toonKalender(); });
+  $("#kalNext").addEventListener("click", function () { boek.maand = new Date(boek.maand.getFullYear(), boek.maand.getMonth() + 1, 1); toonKalender(); });
+
   function toonBoekingen() {
+    $("#boekBadge").textContent = boek.items.filter(function (it) { return it.status === "nieuw"; }).length;
+    show($("#boekBadge"), Number($("#boekBadge").textContent) > 0);
     var lijst = $("#boekLijst");
+    if (boek.tab === "kalender") { show(lijst, false); toonKalender(); return; }
+    show($("#kalWrap"), false); show(lijst, true);
     var items = boek.items.filter(function (it) {
       if (boek.tab === "berichten") return it.soort === "bericht";
       if (boek.tab === "alles") return true;
@@ -506,9 +598,6 @@
       if (boek.tab === "nieuw") return it.status === "nieuw";
       return it.status === "bevestigd";
     });
-    $("#boekBadge").textContent = boek.items.filter(function (it) { return it.status === "nieuw"; }).length;
-    show($("#boekBadge"), Number($("#boekBadge").textContent) > 0);
-
     if (!items.length) {
       lijst.innerHTML = '<p class="leeg">Niets in deze lijst.</p>';
       return;
@@ -542,15 +631,8 @@
 
     $$("#boekLijst .acties .btn").forEach(function (b) {
       b.addEventListener("click", function () {
-        b.classList.add("busy");
-        boekApi({ actie: "status", id: b.dataset.id, status: b.dataset.act }).then(function () {
-          boek.items.forEach(function (it) { if (it.id === b.dataset.id) it.status = b.dataset.act; });
-          toonBoekingen();
-          setTimeout(function () { haalBoekingen().then(toonBoekingen).catch(function () {}); }, 2500);
-        }).catch(function () {
-          b.classList.remove("busy");
-          setErr($("#boekErr"), "De status kon niet aangepast worden. Probeer opnieuw.");
-        });
+        if (b.dataset.act === "geannuleerd" && !confirm("Deze reservatie annuleren? De klant krijgt daar een mail van.")) return;
+        zetStatus(b, b.dataset.id, b.dataset.act);
       });
     });
   }
@@ -565,6 +647,7 @@
         'Volg punt 5 van het LEESMIJ en vul het adres daarna in bij Instellingen.</p>';
       return;
     }
+    show($("#kalWrap"), false); show($("#boekLijst"), true);
     $("#boekLijst").innerHTML = '<p class="mini">Laden…</p>';
     haalBoekingen().then(toonBoekingen).catch(function (e) {
       $("#boekLijst").innerHTML = '<p class="leeg">Geen lijst gevonden.</p>';

@@ -14,7 +14,7 @@ C.util = {$,$$,DAYS,MONTHS,toMin,fmt,reduced,
 
 /* Formulier versturen. Probeert eerst Netlify Forms, dan FormSubmit. Geeft true/false terug. */
 async function post(url, opts){
-  const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 15000);
+  const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 8000);
   try{ return await fetch(url, Object.assign({method:"POST", signal:ctrl.signal}, opts)); }
   finally{ clearTimeout(t); }
 }
@@ -292,12 +292,15 @@ if(cf){
     const btn = $("button[type=submit]",cf); btn.classList.add("busy"); btn.textContent="Bezig met versturen…";
     const data = { _subject:`Contact via website: ${$("#cTopic").value}`, _template:"table", _replyto:$("#cMail").value.trim(), _captcha:"false",
       Onderwerp:$("#cTopic").value, Naam:$("#cName").value.trim(), "E-mail":$("#cMail").value.trim(), Telefoon:$("#cPhone").value.trim()||"-", Bericht:$("#cMsg").value.trim() };
-    await C.bewaar("bericht", {
-      onderwerp: $("#cTopic").value, naam: $("#cName").value.trim(),
-      email: $("#cMail").value.trim(), telefoon: $("#cPhone").value.trim() || "-",
-      bericht: $("#cMsg").value.trim()
-    });
-    const sent = await C.send(data, "contact");
+    const [bewaard, gemaild] = await Promise.all([
+      C.bewaar("bericht", {
+        onderwerp: $("#cTopic").value, naam: $("#cName").value.trim(),
+        email: $("#cMail").value.trim(), telefoon: $("#cPhone").value.trim() || "-",
+        bericht: $("#cMsg").value.trim()
+      }),
+      C.send(data, "contact")
+    ]);
+    const sent = bewaard || gemaild;
     btn.classList.remove("busy"); btn.textContent="Verstuur bericht";
     if(sent){ cf.hidden = true; $("#formSent").classList.add("show"); $("#formSent h3").focus(); }
     else{

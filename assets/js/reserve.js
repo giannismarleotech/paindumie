@@ -188,11 +188,14 @@ next.addEventListener("click", async ()=>{
     Naam: d.naam, Telefoon: d.telefoon, "E-mail": d.email, Opmerking: d.opmerking
   };
   // 1) in de Google Sheet + dashboard, 2) per e-mail
-  const bewaard = await C.bewaar("reservatie", {
-    dag: d.dag, datum: d.datum, uur: d.uur, personen: d.personen, plaats: d.plaats,
-    gelegenheid: d.gelegenheid, naam: d.naam, telefoon: d.telefoon, email: d.email, opmerking: d.opmerking
-  });
-  const gemaild = await C.send(payload, "reservatie");
+  // beide tegelijk, zodat de bezoeker niet op de traagste hoeft te wachten
+  const [bewaard, gemaild] = await Promise.all([
+    C.bewaar("reservatie", {
+      dag: d.dag, datum: d.datum, uur: d.uur, personen: d.personen, plaats: d.plaats,
+      gelegenheid: d.gelegenheid, naam: d.naam, telefoon: d.telefoon, email: d.email, opmerking: d.opmerking
+    }),
+    C.send(payload, "reservatie")
+  ]);
   const ok = bewaard || gemaild;
   S.sending = false;
   if(ok){

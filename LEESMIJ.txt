@@ -107,8 +107,14 @@ dan zet je eenmalig een gratis Google-script op. Duurt vijf minuten.
     de knop "Reservaties" in het dashboard.
 
 Vanaf dan komt elke aanvraag op drie plaatsen toe: in de mailbox,
-in het Google-blad en in het dashboard. Mislukt het script ooit, dan
-blijft de e-mail gewoon werken.
+in het Google-blad en in het dashboard, en de klant krijgt meteen een
+ontvangstmail. Klik je in het dashboard op Bevestigen of Annuleren,
+dan krijgt de klant daar ook een mail van.
+
+In het dashboard staat onder Reservaties een kalender: per dag zie je
+hoeveel aanvragen er zijn (rood = nieuw, groen = bevestigd) en hoeveel
+personen. Klik op een dag voor de namen en uren. Daar kan je ook
+annuleren, of een geannuleerde reservatie terugzetten.
 
 =====================================================
 6. BESTANDEN
