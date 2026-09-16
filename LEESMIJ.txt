@@ -1,0 +1,84 @@
+PAIN DU MIE — WEBSITE + DASHBOARD
+Gemaakt door Marleo · marleo.tech
+
+=====================================================
+1. ONLINE ZETTEN MET GITHUB
+=====================================================
+1. Maak op github.com een repository, bv. "website".
+2. Zet ALLE bestanden uit deze map in de repository (index.html moet
+   bovenaan staan, niet in een submap). De map "_bronbestanden" mag
+   mee, die doet online niets.
+3. Repository > Settings > Pages:
+      Source: Deploy from a branch
+      Branch: main   /  (root)
+   Na een minuut staat de site online.
+4. Eigen domeinnaam: Settings > Pages > Custom domain > je domein
+   invullen en opslaan. GitHub maakt zelf een CNAME-bestand aan.
+   Zet daarna bij je domeinnaamprovider deze records:
+      A     @    185.199.108.153
+      A     @    185.199.109.153
+      A     @    185.199.110.153
+      A     @    185.199.111.153
+      CNAME www  <jouw-github-gebruiker>.github.io
+   Vink daarna "Enforce HTTPS" aan.
+5. Pas in sitemap.xml het adres www.paindumie.be aan naar je echte domein.
+
+=====================================================
+2. HET DASHBOARD
+=====================================================
+Adres:      https://jouwdomein.be/admin/
+E-mail:     Miekevanhoyweghen@icloud.com
+Wachtwoord: Websitepaindumie456-
+
+De eerste keer vraagt het dashboard om een GitHub-sleutel (token).
+Die maak je zo aan:
+   github.com > je foto rechtsboven > Settings
+   > Developer settings (helemaal onderaan links)
+   > Personal access tokens > Fine-grained tokens > Generate new token
+   > Repository access: enkel de repository van de website
+   > Permissions > Repository permissions > Contents: Read and write
+   > Generate token, en de sleutel plakken in het dashboard.
+De sleutel wordt enkel op jouw eigen toestel bewaard.
+
+WAT KAN JE AANPASSEN
+ - Teksten: klik op een tekst in het voorbeeld en typ.
+ - Prijzen: net zoals gewone tekst. Bij de reuzepannenkoeken opent er
+   een venstertje voor de prijs van 1 stuk en van 2 stuks.
+ - Foto's: klik op een foto en kies een nieuwe. Ze wordt automatisch
+   verkleind. Foto's krijgen een nieuwe naam, zodat bezoekers meteen
+   de nieuwe versie zien.
+ - Instellingen (knop rechtsboven): openingsuren, verlofdagen,
+   telefoon, e-mail, Facebook, Instagram, Google en alle regels van
+   de reservatiemodule.
+Druk daarna op PUBLICEREN. GitHub bouwt de site opnieuw op; na een
+halve tot twee minuten staat alles online.
+
+BELANGRIJK
+ - De aanmelding op het dashboard is een slot op de deur, geen kluis.
+   De echte beveiliging is de GitHub-sleutel: zonder sleutel kan
+   niemand iets wijzigen. Deel die sleutel dus met niemand.
+ - Werk niet met twee mensen tegelijk in het dashboard.
+ - Alles wordt bewaard in GitHub, dus elke aanpassing is omkeerbaar.
+   Verkeerd gepubliceerd? Marleo kan alles in één klik terugzetten.
+
+=====================================================
+3. FORMULIEREN (reservaties en contact)
+=====================================================
+Op GitHub Pages lopen de formulieren via FormSubmit naar
+paindumie.bazel@gmail.com. De allereerste keer stuurt FormSubmit een
+activatiemail naar dat adres: daar één keer op "Activate Form"
+klikken. Doe meteen na de lancering een testreservatie.
+Lukt het versturen niet, dan krijgt de bezoeker een kant-en-klare
+e-mail en het telefoonnummer te zien.
+
+=====================================================
+4. BESTANDEN
+=====================================================
+index.html, kaart.html, over-ons.html, reserveren.html,
+contact.html, algemene-voorwaarden.html, privacy.html, 404.html
+admin/            het dashboard
+assets/css        vormgeving
+assets/js         config.js (instellingen), site.js, reserve.js, kaart.js
+assets/fonts      lettertypes (lokaal, dus geen Google Fonts)
+img/              foto's en logo
+_bronbestanden/   scripts waarmee Marleo de pagina's opbouwt

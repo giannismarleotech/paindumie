@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Dashboard · Pain du Mie</title>
+<link rel="icon" href="../img/mark.png">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ---------- aanmelden ---------- -->
+<div class="gate" id="gate">
+  <form class="gate-card" id="loginForm" novalidate>
+    <img src="../img/logo.webp" alt="Pain du Mie" width="640" height="560">
+    <h1>Dashboard</h1>
+    <p class="sub">Meld je aan om teksten, prijzen en foto's aan te passen.</p>
+    <label class="fld"><span>E-mailadres</span><input id="gMail" type="email" autocomplete="username" required></label>
+    <label class="fld"><span>Wachtwoord</span><input id="gPass" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="gErr" role="alert" hidden></div>
+    <button class="btn primary" type="submit">Aanmelden</button>
+    <p class="mini">Vergeet je wachtwoord? Neem contact op met Marleo.</p>
+  </form>
+</div>
+
+<!-- ---------- koppeling met GitHub ---------- -->
+<div class="gate" id="setup" hidden>
+  <form class="gate-card wide" id="setupForm" novalidate>
+    <h1>Eenmalig instellen</h1>
+    <p class="sub">Het dashboard bewaart je aanpassingen rechtstreeks in GitHub. Daarvoor is één sleutel nodig.</p>
+    <label class="fld"><span>GitHub-gebruiker of organisatie</span><input id="sOwner" placeholder="bijvoorbeeld: paindumie" required></label>
+    <label class="fld"><span>Naam van de repository</span><input id="sRepo" placeholder="bijvoorbeeld: website" required></label>
+    <label class="fld"><span>Branch</span><input id="sBranch" value="main" required></label>
+    <label class="fld"><span>Toegangssleutel (token)</span><input id="sToken" type="password" placeholder="github_pat_…" required></label>
+    <label class="check"><input type="checkbox" id="sRemember" checked> <span>Sleutel onthouden op dit toestel</span></label>
+    <div class="err" id="sErr" role="alert" hidden></div>
+    <div class="row">
+      <button class="btn primary" type="submit">Verbinden</button>
+      <button class="btn ghost" type="button" id="sBack">Terug</button>
+    </div>
+    <details class="help">
+      <summary>Hoe maak ik zo'n sleutel?</summary>
+      <ol>
+        <li>Meld je aan op github.com.</li>
+        <li>Klik op je foto rechtsboven en ga naar <b>Settings</b>.</li>
+        <li>Helemaal onderaan links: <b>Developer settings</b>.</li>
+        <li><b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+        <li>Geef als naam "Dashboard Pain du Mie", kies bij <b>Repository access</b> enkel de repository van de website.</li>
+        <li>Bij <b>Permissions</b> → <b>Repository permissions</b> → zet <b>Contents</b> op <b>Read and write</b>.</li>
+        <li>Klik <b>Generate token</b> en plak de sleutel hierboven. Bewaar ze ook ergens veilig.</li>
+      </ol>
+    </details>
+  </form>
+</div>
+
+<!-- ---------- dashboard ---------- -->
+<div class="app" id="app" hidden>
+  <header class="bar">
+    <div class="brand"><img src="../img/logo-head.webp" alt="" width="360" height="341"><span>Dashboard</span></div>
+    <label class="pagepick"><span class="sr">Pagina</span>
+      <select id="pageSel"></select>
+    </label>
+    <div class="spacer"></div>
+    <span class="count" id="count" hidden>0 aanpassingen</span>
+    <button class="btn ghost" id="settingsBtn" type="button">Instellingen</button>
+    <button class="btn ghost" id="resetBtn" type="button" hidden>Terugdraaien</button>
+    <button class="btn primary" id="saveBtn" type="button" disabled>Publiceren</button>
+    <button class="btn ghost icon" id="logoutBtn" type="button" title="Afmelden" aria-label="Afmelden">⎋</button>
+  </header>
+
+  <p class="tip" id="tip">Klik op een tekst om ze aan te passen. Klik op een foto om ze te vervangen. Als alles klopt, druk je op <b>Publiceren</b>.</p>
+
+  <div class="stageframe">
+    <div class="loading" id="loading">Pagina laden…</div>
+    <iframe id="preview" title="Voorbeeld van de website"></iframe>
+  </div>
+</div>
+
+<!-- ---------- instellingen ---------- -->
+<div class="modal" id="settings" hidden>
+  <div class="modal-card">
+    <header><h2>Instellingen</h2><button class="x" id="setClose" type="button" aria-label="Sluiten">×</button></header>
+    <div class="modal-body">
+      <section>
+        <h3>Contact</h3>
+        <div class="grid2">
+          <label class="fld"><span>Telefoon zoals getoond</span><input id="cfLabel"></label>
+          <label class="fld"><span>Telefoon om te bellen</span><input id="cfPhone" placeholder="+32498482256"></label>
+          <label class="fld wide"><span>E-mailadres</span><input id="cfMail" type="email"></label>
+        </div>
+      </section>
+      <section>
+        <h3>Links</h3>
+        <div class="grid2">
+          <label class="fld"><span>Facebook</span><input id="cfFb" placeholder="https://…"></label>
+          <label class="fld"><span>Instagram</span><input id="cfIg" placeholder="https://…"></label>
+          <label class="fld wide"><span>Google</span><input id="cfGg" placeholder="https://…"></label>
+        </div>
+        <p class="mini">Laat een veld leeg om die knop te verbergen op de website.</p>
+      </section>
+      <section>
+        <h3>Openingsuren</h3>
+        <div id="hoursRows" class="hours-rows"></div>
+      </section>
+      <section>
+        <h3>Reserveren</h3>
+        <div class="grid2">
+          <label class="fld"><span>Reserveren kan vanaf</span><input id="cfOpens" type="date"></label>
+          <label class="fld"><span>Vroegste uur</span><input id="cfFirst" type="time"></label>
+          <label class="fld"><span>Minuten tussen twee uren</span><input id="cfStep" type="number" min="5" max="120" step="5"></label>
+          <label class="fld"><span>Laatste reservatie (minuten voor sluiten)</span><input id="cfLast" type="number" min="0" max="240" step="15"></label>
+          <label class="fld"><span>Plaatsen tearoom</span><input id="cfTear" type="number" min="1" max="200"></label>
+          <label class="fld"><span>Plaatsen lounge</span><input id="cfLoun" type="number" min="1" max="200"></label>
+          <label class="fld"><span>Grootste gezelschap online</span><input id="cfMax" type="number" min="1" max="30"></label>
+          <label class="fld"><span>Hoeveel dagen vooruit</span><input id="cfAhead" type="number" min="7" max="365"></label>
+          <label class="fld wide"><span>Verlofdagen (jjjj-mm-dd, gescheiden door komma's)</span><input id="cfClosed" placeholder="2026-12-25, 2027-01-01"></label>
+        </div>
+      </section>
+      <div class="err" id="setErr" role="alert" hidden></div>
+    </div>
+    <footer>
+      <button class="btn ghost" id="setCancel" type="button">Annuleren</button>
+      <button class="btn primary" id="setSave" type="button">Bewaren</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ---------- prijs met 1 stuk / 2 stuks ---------- -->
+<div class="modal small" id="priceModal" hidden>
+  <div class="modal-card">
+    <header><h2>Prijs aanpassen</h2><button class="x" id="prClose" type="button" aria-label="Sluiten">×</button></header>
+    <div class="modal-body">
+      <p class="mini" id="prName"></p>
+      <div class="grid2">
+        <label class="fld"><span>1 stuk</span><input id="prOne" placeholder="9,00"></label>
+        <label class="fld"><span>2 stuks (leeg = niet beschikbaar)</span><input id="prTwo" placeholder="12,50"></label>
+      </div>
+    </div>
+    <footer>
+      <button class="btn ghost" id="prCancel" type="button">Annuleren</button>
+      <button class="btn primary" id="prSave" type="button">Toepassen</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ---------- publiceren ---------- -->
+<div class="modal" id="publish" hidden>
+  <div class="modal-card">
+    <header><h2 id="pubTitle">Publiceren</h2><button class="x" id="pubClose" type="button" aria-label="Sluiten" hidden>×</button></header>
+    <div class="modal-body">
+      <ul class="log" id="pubLog"></ul>
+      <div class="err" id="pubErr" role="alert" hidden></div>
+      <p class="mini" id="pubNote" hidden>De website wordt nu opnieuw opgebouwd door GitHub. Dat duurt meestal een halve tot twee minuten. Ververs daarna de pagina om je aanpassingen te zien.</p>
+    </div>
+    <footer>
+      <button class="btn ghost" id="pubCancel" type="button">Annuleren</button>
+      <button class="btn primary" id="pubGo" type="button">Ja, publiceren</button>
+    </footer>
+  </div>
+</div>
+
+<input type="file" id="filePick" accept="image/*" hidden>
+<script src="admin.js"></script>
+</body>
+</html>
