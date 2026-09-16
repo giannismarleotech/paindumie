@@ -96,3 +96,25 @@ button{font:inherit;cursor:pointer}
   .hrow label{grid-column:1/-1}
   .bar .brand span{display:none}
 }
+
+/* reservaties */
+.modal.wide .modal-card{width:min(900px,100%)}
+.badge{background:var(--brick);color:#fff;border-radius:999px;padding:1px 7px;font-size:.78rem;margin-left:5px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.5em 1em;font-size:.9rem}
+.tab.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.boeklijst{display:grid;gap:10px;min-height:120px}
+.kaartje{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:#fff}
+.kaartje.nieuw{border-color:var(--brick);box-shadow:inset 3px 0 0 var(--brick)}
+.kaartje.geannuleerd{opacity:.55}
+.kaartje .top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.kaartje .wanneer{font:500 1.15rem var(--serif)}
+.kaartje .wie{font-size:.95rem;color:var(--muted)}
+.kaartje .st{font-size:.76rem;border-radius:999px;padding:2px 9px;background:var(--sand);color:#5a4636}
+.kaartje .st.nieuw{background:var(--brick);color:#fff}
+.kaartje .st.bevestigd{background:#DCEBD8;color:#2F5C36}
+.kaartje .st.geannuleerd{background:#F1DED8;color:#7A2715}
+.kaartje .det{margin:8px 0 0;font-size:.92rem;color:#43362E;line-height:1.5}
+.kaartje .acties{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.kaartje .acties .btn{padding:.5em 1em;font-size:.86rem}
+.leeg{text-align:center;color:var(--muted);padding:34px 10px}

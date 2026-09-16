@@ -187,7 +187,13 @@ next.addEventListener("click", async ()=>{
     Dag: d.dag, Datum: d.datum, Uur: d.uur, Personen: d.personen, Plaats: d.plaats, Gelegenheid: d.gelegenheid,
     Naam: d.naam, Telefoon: d.telefoon, "E-mail": d.email, Opmerking: d.opmerking
   };
-  const ok = await C.send(payload, "reservatie");
+  // 1) in de Google Sheet + dashboard, 2) per e-mail
+  const bewaard = await C.bewaar("reservatie", {
+    dag: d.dag, datum: d.datum, uur: d.uur, personen: d.personen, plaats: d.plaats,
+    gelegenheid: d.gelegenheid, naam: d.naam, telefoon: d.telefoon, email: d.email, opmerking: d.opmerking
+  });
+  const gemaild = await C.send(payload, "reservatie");
+  const ok = bewaard || gemaild;
   S.sending = false;
   if(ok){
     $("#doneTitle").textContent = "Aanvraag verstuurd";

@@ -4,7 +4,9 @@ Gemaakt door Marleo · marleo.tech
 =====================================================
 1. ONLINE ZETTEN MET GITHUB
 =====================================================
-1. Maak op github.com een repository, bv. "website".
+1. Maak op github.com een repository, bv. "paindumie". Zet ze op
+   PUBLIC: GitHub Pages werkt niet bij een private repository op een
+   gratis account.
 2. Zet ALLE bestanden uit deze map in de repository (index.html moet
    bovenaan staan, niet in een submap). De map "_bronbestanden" mag
    mee, die doet online niets.
@@ -21,7 +23,8 @@ Gemaakt door Marleo · marleo.tech
       A     @    185.199.111.153
       CNAME www  <jouw-github-gebruiker>.github.io
    Vink daarna "Enforce HTTPS" aan.
-5. Pas in sitemap.xml het adres www.paindumie.be aan naar je echte domein.
+5. Het CNAME-bestand met je domein zit er al in, dus GitHub pikt
+   paindumie.be vanzelf op. Vink 'Enforce HTTPS' aan zodra het kan.
 
 =====================================================
 2. HET DASHBOARD
@@ -64,6 +67,8 @@ BELANGRIJK
 =====================================================
 3. FORMULIEREN (reservaties en contact)
 =====================================================
+Zie ook punt 5: met het Google-script komen reservaties ook in het
+dashboard terecht.
 Op GitHub Pages lopen de formulieren via FormSubmit naar
 paindumie.bazel@gmail.com. De allereerste keer stuurt FormSubmit een
 activatiemail naar dat adres: daar één keer op "Activate Form"
@@ -72,7 +77,41 @@ Lukt het versturen niet, dan krijgt de bezoeker een kant-en-klare
 e-mail en het telefoonnummer te zien.
 
 =====================================================
-4. BESTANDEN
+5. RESERVATIES IN HET DASHBOARD (aanrader)
+=====================================================
+Standaard komen reservaties enkel per e-mail binnen. Wil je ze ook in
+het dashboard zien, met een knop om te bevestigen of te annuleren,
+dan zet je eenmalig een gratis Google-script op. Duurt vijf minuten.
+
+ 1. Ga naar https://sheets.new en noem het blad
+    "Pain du Mie - reservaties".
+ 2. Menu Extensions (Extensies) > Apps Script.
+ 3. Wis alles in het venster en plak de volledige inhoud van
+    _bronbestanden/google-apps-script.js.
+ 4. Bovenaan dat script staan twee regels. Controleer ze:
+       var MAIL    = "paindumie.bazel@gmail.com";
+       var SLEUTEL = "paindumie-2026";
+    De sleutel mag je vrij kiezen, zolang ze straks overeenkomt.
+ 5. Klik op Deploy (Implementeren) > New deployment (Nieuwe
+    implementatie) > kies bij type "Web app" en zet:
+       Execute as      : Me (Ikzelf)
+       Who has access  : Anyone (Iedereen)
+    Klik Deploy en geef Google de gevraagde toestemming.
+    (Google waarschuwt dat het script niet geverifieerd is. Klik op
+     "Advanced" / "Geavanceerd" en dan op "Go to ... (unsafe)". Dat is
+     je eigen script, dus dat mag.)
+ 6. Kopieer het adres dat eindigt op /exec.
+ 7. Open het dashboard > Instellingen > Reservaties bewaren.
+    Plak het adres en dezelfde sleutel. Bewaren en Publiceren.
+ 8. Doe een testreservatie op de site en kijk of ze verschijnt onder
+    de knop "Reservaties" in het dashboard.
+
+Vanaf dan komt elke aanvraag op drie plaatsen toe: in de mailbox,
+in het Google-blad en in het dashboard. Mislukt het script ooit, dan
+blijft de e-mail gewoon werken.
+
+=====================================================
+6. BESTANDEN
 =====================================================
 index.html, kaart.html, over-ons.html, reserveren.html,
 contact.html, algemene-voorwaarden.html, privacy.html, 404.html

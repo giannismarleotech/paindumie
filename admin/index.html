@@ -63,6 +63,7 @@
     </label>
     <div class="spacer"></div>
     <span class="count" id="count" hidden>0 aanpassingen</span>
+    <button class="btn ghost" id="boekBtn" type="button">Reservaties <span class="badge" id="boekBadge" hidden>0</span></button>
     <button class="btn ghost" id="settingsBtn" type="button">Instellingen</button>
     <button class="btn ghost" id="resetBtn" type="button" hidden>Terugdraaien</button>
     <button class="btn primary" id="saveBtn" type="button" disabled>Publiceren</button>
@@ -74,6 +75,33 @@
   <div class="stageframe">
     <div class="loading" id="loading">Pagina laden…</div>
     <iframe id="preview" title="Voorbeeld van de website"></iframe>
+  </div>
+</div>
+
+<!-- ---------- reservaties en berichten ---------- -->
+<div class="modal wide" id="boek" hidden>
+  <div class="modal-card">
+    <header>
+      <h2>Reservaties en berichten</h2>
+      <div class="row">
+        <button class="btn ghost" id="boekVernieuw" type="button">Vernieuwen</button>
+        <button class="x" id="boekClose" type="button" aria-label="Sluiten">×</button>
+      </div>
+    </header>
+    <div class="modal-body">
+      <div class="tabs" id="boekTabs">
+        <button class="tab on" data-tab="nieuw" type="button">Nieuw</button>
+        <button class="tab" data-tab="bevestigd" type="button">Bevestigd</button>
+        <button class="tab" data-tab="berichten" type="button">Berichten</button>
+        <button class="tab" data-tab="alles" type="button">Alles</button>
+      </div>
+      <div id="boekLijst" class="boeklijst"><p class="mini">Laden…</p></div>
+      <div class="err" id="boekErr" role="alert" hidden></div>
+    </div>
+    <footer>
+      <p class="mini" id="boekUitleg" style="margin:0;flex:1">Nog niet ingesteld? Zie LEESMIJ punt 5.</p>
+      <button class="btn ghost" id="boekCancel" type="button">Sluiten</button>
+    </footer>
   </div>
 </div>
 
@@ -98,6 +126,14 @@
           <label class="fld wide"><span>Google</span><input id="cfGg" placeholder="https://…"></label>
         </div>
         <p class="mini">Laat een veld leeg om die knop te verbergen op de website.</p>
+      </section>
+      <section>
+        <h3>Reservaties bewaren</h3>
+        <div class="grid2">
+          <label class="fld wide"><span>Adres van het Google-script (eindigt op /exec)</span><input id="cfApi" placeholder="https://script.google.com/macros/s/…/exec"></label>
+          <label class="fld wide"><span>Geheime sleutel (zelfde als in het script)</span><input id="cfKey" placeholder="paindumie-2026"></label>
+        </div>
+        <p class="mini">Laat leeg om reservaties enkel per e-mail te ontvangen.</p>
       </section>
       <section>
         <h3>Openingsuren</h3>

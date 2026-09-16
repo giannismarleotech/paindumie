@@ -9,6 +9,11 @@
    seats       : plaatsen in de zaak; in de lounge kan enkel iets gedronken worden
    closedDates : verlofdagen, bv. ["2026-12-25","2027-01-01"]
 
+   boekingenApi : adres van het Google-script waar reservaties en berichten
+                  in een Google Sheet bewaard worden en in het dashboard
+                  verschijnen. Leeg = enkel per e-mail. Zie LEESMIJ punt 5.
+   boekingenKey : het geheime woord dat je in datzelfde script instelde
+
    FORMULIEREN (reservaties + contact)
    1) Netlify Forms werkt zodra de site op Netlify draait.
    2) Anders gaat het bericht via FormSubmit naar het e-mailadres hieronder.
@@ -22,6 +27,8 @@ window.PDM = /*PDM-DATA-START*/{
   "phone": "+32498482256",
   "phoneLabel": "0498 48 22 56",
   "netlifyForms": false,
+  "boekingenApi": "",
+  "boekingenKey": "",
   "formEndpoint": "https://formsubmit.co/ajax/paindumie.bazel@gmail.com",
   "links": {
     "google": "",

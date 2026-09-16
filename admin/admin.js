@@ -181,7 +181,7 @@
     sel.value = state.page;
     sel.addEventListener("change", function () { state.page = sel.value; loadPreview(); });
     loadPreview();
-    loadConfig();
+    loadConfig().then(telNieuwe).catch(function () {});
   }
 
   /* ---------- voorbeeld met bewerking ---------- */
@@ -361,6 +361,8 @@
     $("#cfLabel").value = c.phoneLabel || "";
     $("#cfPhone").value = c.phone || "";
     $("#cfMail").value = c.email || "";
+    $("#cfApi").value = c.boekingenApi || "";
+    $("#cfKey").value = c.boekingenKey || "";
     $("#cfFb").value = (c.links || {}).facebook || "";
     $("#cfIg").value = (c.links || {}).instagram || "";
     $("#cfGg").value = (c.links || {}).google || "";
@@ -397,6 +399,8 @@
     c.phone = $("#cfPhone").value.trim();
     c.email = $("#cfMail").value.trim();
     c.formEndpoint = c.email ? "https://formsubmit.co/ajax/" + c.email : "";
+    c.boekingenApi = $("#cfApi").value.trim();
+    c.boekingenKey = $("#cfKey").value.trim();
     c.links = { google: $("#cfGg").value.trim(), facebook: $("#cfFb").value.trim(), instagram: $("#cfIg").value.trim() };
     var hours = {};
     $$(".hrow", $("#hoursRows")).forEach(function (row) {
@@ -437,6 +441,138 @@
     closeSettings(); refreshCount();
     loadPreview();               // openingsuren staan meteen juist in het voorbeeld
   });
+
+  /* ---------- reservaties en berichten ---------- */
+  var boek = { items: [], tab: "nieuw", bezig: false };
+
+  function cfg() { return state.config || state.configOrig || {}; }
+
+  function boekApi(body) {
+    var c = cfg();
+    if (!c.boekingenApi) return Promise.reject(new Error("niet-ingesteld"));
+    return fetch(c.boekingenApi, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(Object.assign({ sleutel: c.boekingenKey }, body))
+    }).then(function (r) { return r.json(); });
+  }
+
+  function haalBoekingen() {
+    var c = cfg();
+    if (!c.boekingenApi) return Promise.reject(new Error("niet-ingesteld"));
+    var url = c.boekingenApi + (c.boekingenApi.indexOf("?") > -1 ? "&" : "?") +
+      "sleutel=" + encodeURIComponent(c.boekingenKey || "") + "&t=" + Date.now();
+    return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || d.ok !== true) throw new Error(d && d.fout === "sleutel"
+        ? "De sleutel klopt niet met die in het Google-script."
+        : "De lijst kon niet geladen worden.");
+      boek.items = d.items || [];
+      return boek.items;
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+
+  function toonBoekingen() {
+    var lijst = $("#boekLijst");
+    var items = boek.items.filter(function (it) {
+      if (boek.tab === "berichten") return it.soort === "bericht";
+      if (boek.tab === "alles") return true;
+      if (it.soort === "bericht") return false;
+      if (boek.tab === "nieuw") return it.status === "nieuw";
+      return it.status === "bevestigd";
+    });
+    $("#boekBadge").textContent = boek.items.filter(function (it) { return it.status === "nieuw"; }).length;
+    show($("#boekBadge"), Number($("#boekBadge").textContent) > 0);
+
+    if (!items.length) {
+      lijst.innerHTML = '<p class="leeg">Niets in deze lijst.</p>';
+      return;
+    }
+    lijst.innerHTML = items.map(function (it) {
+      var bericht = it.soort === "bericht";
+      var kop = bericht
+        ? esc(it.onderwerp || "Bericht")
+        : esc(it.dag || it.datum) + " om " + esc(it.uur) + " · " + esc(it.personen) +
+          (String(it.personen) === "1" ? " persoon" : " personen");
+      var det = bericht
+        ? esc(it.opmerking)
+        : "Plaats: " + esc(it.plaats || "-") +
+          (it.gelegenheid && it.gelegenheid !== "-" ? " · " + esc(it.gelegenheid) : "") +
+          (it.opmerking && it.opmerking !== "-" ? "<br>Opmerking: " + esc(it.opmerking) : "");
+      var acties = bericht ? "" :
+        '<button class="btn primary" data-act="bevestigd" data-id="' + esc(it.id) + '">Bevestigen</button>' +
+        '<button class="btn ghost" data-act="geannuleerd" data-id="' + esc(it.id) + '">Annuleren</button>';
+      return '<article class="kaartje ' + esc(it.status) + '">' +
+        '<div class="top"><span class="wanneer">' + kop + '</span>' +
+        '<span class="st ' + esc(it.status) + '">' + esc(it.status) + "</span></div>" +
+        '<p class="wie" style="margin:4px 0 0">' + esc(it.naam) +
+        (it.telefoon && it.telefoon !== "-" ? ' · <a href="tel:' + esc(it.telefoon) + '">' + esc(it.telefoon) + "</a>" : "") +
+        (it.email ? ' · <a href="mailto:' + esc(it.email) + '">' + esc(it.email) + "</a>" : "") +
+        "</p>" +
+        '<p class="det">' + det + "</p>" +
+        '<p class="mini" style="margin:8px 0 0">Binnengekomen: ' + esc(it.binnengekomen) + "</p>" +
+        (acties ? '<div class="acties">' + acties + "</div>" : "") +
+        "</article>";
+    }).join("");
+
+    $$("#boekLijst .acties .btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        b.classList.add("busy");
+        boekApi({ actie: "status", id: b.dataset.id, status: b.dataset.act }).then(function (d) {
+          if (!d || d.ok !== true) throw new Error("mislukt");
+          boek.items.forEach(function (it) { if (it.id === b.dataset.id) it.status = b.dataset.act; });
+          toonBoekingen();
+        }).catch(function () {
+          b.classList.remove("busy");
+          setErr($("#boekErr"), "De status kon niet aangepast worden. Probeer opnieuw.");
+        });
+      });
+    });
+  }
+
+  function openBoek() {
+    setErr($("#boekErr"), "");
+    show($("#boek"), true);
+    var c = cfg();
+    show($("#boekUitleg"), !c.boekingenApi);
+    if (!c.boekingenApi) {
+      $("#boekLijst").innerHTML = '<p class="leeg">Nog niet ingesteld.<br>' +
+        'Volg punt 5 van het LEESMIJ en vul het adres daarna in bij Instellingen.</p>';
+      return;
+    }
+    $("#boekLijst").innerHTML = '<p class="mini">Laden…</p>';
+    haalBoekingen().then(toonBoekingen).catch(function (e) {
+      $("#boekLijst").innerHTML = '<p class="leeg">Geen lijst gevonden.</p>';
+      setErr($("#boekErr"), e.message === "niet-ingesteld" ? "Nog niet ingesteld." : e.message);
+    });
+  }
+
+  $("#boekBtn").addEventListener("click", openBoek);
+  $("#boekVernieuw").addEventListener("click", openBoek);
+  $("#boekClose").addEventListener("click", function () { show($("#boek"), false); });
+  $("#boekCancel").addEventListener("click", function () { show($("#boek"), false); });
+  $$("#boekTabs .tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      $$("#boekTabs .tab").forEach(function (x) { x.classList.toggle("on", x === t); });
+      boek.tab = t.dataset.tab;
+      toonBoekingen();
+    });
+  });
+
+  /* teller van nieuwe aanvragen op de achtergrond */
+  function telNieuwe() {
+    if (!cfg().boekingenApi) return;
+    haalBoekingen().then(function () {
+      var n = boek.items.filter(function (it) { return it.status === "nieuw"; }).length;
+      $("#boekBadge").textContent = n;
+      show($("#boekBadge"), n > 0);
+    }).catch(function () {});
+  }
 
   /* ---------- teller en terugdraaien ---------- */
   function changeCount() {
