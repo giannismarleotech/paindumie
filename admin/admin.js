@@ -30,6 +30,7 @@
     page: PAGES[0].f,
     text: {},                      // { "index.html": { t3: {html:"…"} | {p1:"9,00",p2:"12,50"} } }
     images: {},                    // { "img/oud.jpg": {newPath, base64, dataUrl} }
+    struct: {},                    // { "kaart.html": [ {op:"add", lijst:3, item:{...}}, {op:"del", id:"t42"} ] }
     config: null,                  // gewijzigde instellingen
     configOrig: null,
     configRaw: null
@@ -200,6 +201,40 @@
     show($("#loading"), false);
   });
 
+  /* ---------- kaartitems toevoegen en verwijderen ---------- */
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function prijsNet(p) {
+    p = String(p || "").trim().replace(/^€\s*/, "").replace(".", ",");
+    if (/^\d+$/.test(p)) p += ",00";
+    if (/^\d+,\d$/.test(p)) p += "0";
+    return p ? "€ " + p : "";
+  }
+  function itemHtml(it) {
+    var zoek = (it.n + " " + (it.d || "")).trim();
+    return '<li class="item" data-s="' + escHtml(zoek) + '">' +
+      '<span class="n" data-e="' + it.idN + '">' + escHtml(it.n) + "</span>" +
+      '<span aria-hidden="true" class="l"></span>' +
+      '<span class="p" data-e="' + it.idP + '">' + escHtml(prijsNet(it.p)) + "</span>" +
+      (it.d ? '<span class="d" data-e="' + it.idD + '">' + escHtml(it.d) + "</span>" : "") +
+      "</li>";
+  }
+  function nieuwId() { return "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function structLijst() { return state.struct[state.page] = state.struct[state.page] || []; }
+
+  var itemDoel = null;   // de <ul> waar het nieuwe item in komt (in het voorbeeld)
+  function openItem(ul, lijstIdx) {
+    itemDoel = { ul: ul, idx: lijstIdx };
+    ["itNaam", "itPrijs", "itOms"].forEach(function (id) { $("#" + id).value = ""; });
+    setErr($("#itErr"), "");
+    show($("#itemModal"), true);
+    setTimeout(function () { $("#itNaam").focus(); }, 30);
+  }
+  function sluitItem() { show($("#itemModal"), false); itemDoel = null; }
+
   function injectEditor(doc) {
     // storende onderdelen uit de weg
     var intro = doc.getElementById("intro"); if (intro) intro.remove();
@@ -268,6 +303,60 @@
       });
     });
 
+    /* kaart: items toevoegen en verwijderen */
+    var lijsten = $$("ul.items", doc);
+    if (lijsten.length) {
+      var st2 = doc.createElement("style");
+      st2.textContent =
+        ".pdm-add{display:block;width:100%;margin:10px 0 4px;border:1px dashed #9C4A2C;background:rgba(156,74,44,.06);color:#9C4A2C;border-radius:999px;padding:.55em 1em;font:500 .86rem sans-serif;cursor:pointer}" +
+        ".pdm-add:hover{background:rgba(156,74,44,.14)}" +
+        "li.item{position:relative}" +
+        ".pdm-del{position:absolute;right:-6px;top:-8px;width:22px;height:22px;border-radius:50%;border:0;background:#A8321E;color:#fff;font:700 13px/22px sans-serif;cursor:pointer;opacity:0;transition:opacity .15s;z-index:3}" +
+        "li.item:hover .pdm-del{opacity:1}" +
+        "li.item.pdm-weg{opacity:.35;text-decoration:line-through}" +
+        "li.item.pdm-nieuw{outline:2px solid #3F7A46;outline-offset:3px;border-radius:8px}";
+      doc.head.appendChild(st2);
+      var ops = state.struct[state.page] || [];
+      lijsten.forEach(function (ul, idx) {
+        // reeds geplande toevoegingen tonen
+        ops.forEach(function (op) {
+          if (op.op === "add" && op.lijst === idx) {
+            ul.insertAdjacentHTML("beforeend", itemHtml(op.item));
+            ul.lastElementChild.classList.add("pdm-nieuw");
+          }
+        });
+        var knop = doc.createElement("button");
+        knop.type = "button"; knop.className = "pdm-add"; knop.textContent = "+ Item toevoegen";
+        knop.addEventListener("click", function (ev) { ev.preventDefault(); openItem(ul, idx); });
+        ul.insertAdjacentElement("afterend", knop);
+      });
+      $$("li.item", doc).forEach(function (li) {
+        var naam = li.querySelector(".n"); if (!naam) return;
+        var id = naam.getAttribute("data-e");
+        var x = doc.createElement("button");
+        x.type = "button"; x.className = "pdm-del"; x.textContent = "×"; x.title = "Dit item verwijderen";
+        li.appendChild(x);
+        var gepland = ops.some(function (op) { return op.op === "del" && op.id === id; });
+        if (gepland) li.classList.add("pdm-weg");
+        x.addEventListener("click", function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          var lijst = structLijst();
+          if (li.classList.contains("pdm-nieuw")) {           // nog niet gepubliceerd: gewoon schrappen
+            var i = lijst.findIndex(function (op) { return op.op === "add" && op.item.idN === id; });
+            if (i > -1) lijst.splice(i, 1);
+            li.remove(); refreshCount(); return;
+          }
+          var j = lijst.findIndex(function (op) { return op.op === "del" && op.id === id; });
+          if (j > -1) { lijst.splice(j, 1); li.classList.remove("pdm-weg"); }
+          else {
+            if (!confirm("\"" + naam.textContent.trim() + "\" van de kaart halen?")) return;
+            lijst.push({ op: "del", id: id }); li.classList.add("pdm-weg");
+          }
+          refreshCount();
+        });
+      });
+    }
+
     $$("[data-img]", doc).forEach(function (img) {
       var src = img.getAttribute("src");
       var rep = state.images[src];
@@ -277,6 +366,36 @@
 
     refreshCount();
   }
+
+  $("#itClose").addEventListener("click", sluitItem);
+  $("#itCancel").addEventListener("click", sluitItem);
+  $("#itSave").addEventListener("click", function () {
+    var n = $("#itNaam").value.trim(), p = $("#itPrijs").value.trim(), d = $("#itOms").value.trim();
+    if (!n) { setErr($("#itErr"), "Geef een naam."); return; }
+    if (!p || !/^€?\s*\d+([,.]\d{1,2})?$/.test(p)) { setErr($("#itErr"), "Geef een prijs, bijvoorbeeld 7,50."); return; }
+    var item = { idN: nieuwId(), idP: nieuwId(), idD: nieuwId(), n: n, p: p, d: d };
+    structLijst().push({ op: "add", lijst: itemDoel.idx, item: item });
+    var ul = itemDoel.ul, doc = ul.ownerDocument;
+    ul.insertAdjacentHTML("beforeend", itemHtml(item));
+    var li = ul.lastElementChild; li.classList.add("pdm-nieuw");
+    // meteen ook bewerkbaar en verwijderbaar maken
+    var x = doc.createElement("button"); x.type = "button"; x.className = "pdm-del"; x.textContent = "×"; li.appendChild(x);
+    x.addEventListener("click", function (ev) {
+      ev.preventDefault(); var lijst = structLijst();
+      var i = lijst.findIndex(function (op) { return op.op === "add" && op.item.idN === item.idN; });
+      if (i > -1) lijst.splice(i, 1); li.remove(); refreshCount();
+    });
+    $$("[data-e]", li).forEach(function (el) {
+      el.setAttribute("contenteditable", "true");
+      el.addEventListener("input", function () {
+        if (el.getAttribute("data-e") === item.idN) item.n = el.textContent;
+        else if (el.getAttribute("data-e") === item.idP) item.p = el.textContent;
+        else item.d = el.textContent;
+      });
+    });
+    sluitItem(); refreshCount();
+    li.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
 
   /* ---------- prijs met twee bedragen ---------- */
   var priceEl = null;
@@ -726,6 +845,7 @@
     var n = 0;
     Object.keys(state.text).forEach(function (p) { n += Object.keys(state.text[p]).length; });
     n += Object.keys(state.images).length;
+    Object.keys(state.struct).forEach(function (p) { n += state.struct[p].length; });
     if (state.config && JSON.stringify(state.config) !== JSON.stringify(state.configOrig)) n++;
     return n;
   }
@@ -739,7 +859,7 @@
   }
   $("#resetBtn").addEventListener("click", function () {
     if (!confirm("Alle niet-gepubliceerde aanpassingen terugdraaien?")) return;
-    state.text = {}; state.images = {}; state.config = null;
+    state.text = {}; state.images = {}; state.struct = {}; state.config = null;
     refreshCount(); loadPreview();
   });
   window.addEventListener("beforeunload", function (e) {
@@ -765,6 +885,12 @@
       var naam = (PAGES.filter(function (x) { return x.f === p; })[0] || { n: p }).n;
       lijst.push(n + (n === 1 ? " tekst" : " teksten") + " op " + naam);
     });
+    Object.keys(state.struct).forEach(function (p) {
+      var toe = state.struct[p].filter(function (o) { return o.op === "add"; }).length;
+      var weg = state.struct[p].filter(function (o) { return o.op === "del"; }).length;
+      if (toe) lijst.push(toe + (toe === 1 ? " item toegevoegd" : " items toegevoegd") + " op de kaart");
+      if (weg) lijst.push(weg + (weg === 1 ? " item verwijderd" : " items verwijderd") + " van de kaart");
+    });
     var ni = Object.keys(state.images).length;
     if (ni) lijst.push(ni + (ni === 1 ? " foto" : " foto's") + " vervangen");
     if (state.config && JSON.stringify(state.config) !== JSON.stringify(state.configOrig)) lijst.push("instellingen aangepast");
@@ -783,7 +909,7 @@
       $("#pubTitle").textContent = "Gepubliceerd";
       logLine("Klaar! Alles staat online.", "ok");
       show($("#pubNote"), true);
-      state.text = {}; state.images = {};
+      state.text = {}; state.images = {}; state.struct = {};
       if (state.config) { state.configOrig = state.config; state.config = null; }
       refreshCount();
       go.classList.remove("busy"); show(go, false); show(cancel, false); show($("#pubClose"), true);
@@ -795,8 +921,18 @@
     });
   });
 
-  function patchHtml(source, edits) {
+  function patchHtml(source, edits, ops) {
     var doc = new DOMParser().parseFromString(source, "text/html");
+    (ops || []).forEach(function (op) {
+      if (op.op === "add") {
+        var ul = doc.querySelectorAll("ul.items")[op.lijst];
+        if (ul) ul.insertAdjacentHTML("beforeend", itemHtml(op.item));
+      } else if (op.op === "del") {
+        var n = doc.querySelector('[data-e="' + op.id + '"]');
+        var li = n && n.closest("li.item");
+        if (li) li.remove();
+      }
+    });
     Object.keys(edits).forEach(function (id) {
       var el = doc.querySelector('[data-e="' + id + '"]');
       if (!el) return;                       // element bestaat niet meer: overslaan
@@ -830,6 +966,7 @@
 
     // 2. bestanden ophalen die aangepast moeten worden
     var nodig = Object.keys(state.text);
+    Object.keys(state.struct).forEach(function (p) { if (state.struct[p].length && nodig.indexOf(p) === -1) nodig.push(p); });
     if (imgs.length) {
       PAGES.forEach(function (p) { if (nodig.indexOf(p.f) === -1) nodig.push(p.f); });
       nodig.push(CSS_FILE);
@@ -842,10 +979,12 @@
 
     // 3. aanpassingen toepassen
     chain = chain.then(function () {
-      Object.keys(state.text).forEach(function (page) {
+      var paginas = Object.keys(state.text);
+      Object.keys(state.struct).forEach(function (p) { if (paginas.indexOf(p) === -1) paginas.push(p); });
+      paginas.forEach(function (page) {
         var f = files[page];
         if (!f) return;
-        var nieuw = patchHtml(f.text, state.text[page]);
+        var nieuw = patchHtml(f.text, state.text[page] || {}, state.struct[page] || []);
         if (nieuw !== f.text) { f.text = nieuw; f.changed = true; }
       });
       imgs.forEach(function (oldPath) {

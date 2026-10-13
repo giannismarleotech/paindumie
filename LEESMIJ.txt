@@ -45,6 +45,10 @@ De sleutel wordt enkel op jouw eigen toestel bewaard.
 
 WAT KAN JE AANPASSEN
  - Teksten: klik op een tekst in het voorbeeld en typ.
+ - Kaart: onder elke lijst staat "+ Item toevoegen" voor een nieuw
+   gerecht of drankje (naam, prijs, omschrijving). Ga je met de muis
+   over een item, dan verschijnt een rood kruisje om het te verwijderen.
+   Een nieuw item kan je daarna nog aanpassen door erop te klikken.
  - Prijzen: net zoals gewone tekst. Bij de reuzepannenkoeken opent er
    een venstertje voor de prijs van 1 stuk en van 2 stuks.
  - Foto's: klik op een foto en kies een nieuwe. Ze wordt automatisch

@@ -70,7 +70,7 @@
     <button class="btn ghost icon" id="logoutBtn" type="button" title="Afmelden" aria-label="Afmelden">⎋</button>
   </header>
 
-  <p class="tip" id="tip">Klik op een tekst om ze aan te passen. Klik op een foto om ze te vervangen. Als alles klopt, druk je op <b>Publiceren</b>.</p>
+  <p class="tip" id="tip">Klik op een tekst om ze aan te passen. Klik op een foto om ze te vervangen. Op de kaart: <b>+ Item toevoegen</b> onder elke lijst, en het rode kruisje bij een item om het te verwijderen. Als alles klopt, druk je op <b>Publiceren</b>.</p>
 
   <div class="stageframe">
     <div class="loading" id="loading">Pagina laden…</div>
@@ -195,6 +195,24 @@
     <footer>
       <button class="btn ghost" id="nwCancel" type="button">Annuleren</button>
       <button class="btn primary" id="nwSave" type="button">Toevoegen</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ---------- kaartitem toevoegen ---------- -->
+<div class="modal small" id="itemModal" hidden>
+  <div class="modal-card">
+    <header><h2>Item toevoegen</h2><button class="x" id="itClose" type="button" aria-label="Sluiten">×</button></header>
+    <div class="modal-body">
+      <label class="fld"><span>Naam</span><input id="itNaam" placeholder="bijvoorbeeld: Broodje gezond"></label>
+      <label class="fld"><span>Prijs</span><input id="itPrijs" placeholder="7,50" inputmode="decimal"></label>
+      <label class="fld"><span>Omschrijving (optioneel)</span><input id="itOms" placeholder="bijvoorbeeld: kaas, ham, ei, sla, tomaat"></label>
+      <div class="err" id="itErr" role="alert" hidden></div>
+      <p class="mini">Het item komt onderaan de lijst. Je kan het daarna nog aanpassen door erop te klikken.</p>
+    </div>
+    <footer>
+      <button class="btn ghost" id="itCancel" type="button">Annuleren</button>
+      <button class="btn primary" id="itSave" type="button">Toevoegen</button>
     </footer>
   </div>
 </div>
